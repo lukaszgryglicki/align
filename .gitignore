@@ -22,6 +22,7 @@ align
 *.tiff
 *.jpg
 *.jpeg
+*.bmp
 !/R.JPG
 !/G.JPG
 !/B.JPG
