@@ -95,7 +95,7 @@ func alignImages(imageNames []string) error {
 		thrN = runtime.NumCPU()
 	}
 	runtime.GOMAXPROCS(thrN)
-	fmt.Printf("Using %d (v)CPUs\n", thrN)
+	fmt.Printf("Using %d (v)CPU(s)\n", thrN)
 
 	// From X
 	fromX := 0
@@ -227,7 +227,7 @@ func alignImages(imageNames []string) error {
 			return fmt.Errorf("PQ must be from 0-3 range")
 		}
 		pngq = png.CompressionLevel(-v)
-		fmt.Printf("PNG quality set to: #%d\n", pngq)
+		fmt.Printf("PNG quality set to: #%d\n", -pngq)
 	}
 
 	ch := make(chan error)
@@ -382,12 +382,12 @@ func alignImages(imageNames []string) error {
 		oX = [3]int{0, offX[0], -offX[2]}
 		oY = [3]int{0, offY[0], -offY[2]}
 	case 1:
-		fmt.Printf("Base align 1->2 at distance: %f\n", dist[0])
+		fmt.Printf("Base align 1->2 at distance: %f\n", dist[1])
 		// 1->0, 1->1, 1->2
 		oX = [3]int{-offX[0], 0, offX[1]}
 		oY = [3]int{-offY[0], 0, offY[1]}
 	case 2:
-		fmt.Printf("Base align 2->0 at distance: %f\n", dist[0])
+		fmt.Printf("Base align 2->0 at distance: %f\n", dist[2])
 		// 2->0, 2->1, 2->2
 		oX = [3]int{offX[2], -offX[1], 0}
 		oY = [3]int{offY[2], -offY[1], 0}

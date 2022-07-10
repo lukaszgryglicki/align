@@ -17,6 +17,7 @@
 # LG
 out
 /align
+*/swp
 *.log
 *.tif
 *.tiff
@@ -30,5 +31,6 @@ out
 !/B.JPG
 !/Unaligned.JPG
 !/Aligned.JPG
+!/Aligned.PNG
 !/small_Unaligned.JPG
 !/small_Aligned.JPG
