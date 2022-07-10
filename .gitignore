@@ -16,7 +16,7 @@
 
 # LG
 out
-align
+/align
 *.log
 *.tif
 *.tiff
