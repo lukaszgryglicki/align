@@ -19,6 +19,11 @@ You can do the same using ImageMagick's `convert`: `convert R.JPG G.JPG B.JPG -c
 
 But `convert` will not try to aliggn images together, it will only combine channels.
 
+See:
+
+![small_Aligned.JPG](Aligned.JPG)
+![small_Unaligned.JPG](Unaligned.JPG)
+
 # Some details
 
 Supported image types are: PNG, JPG, GIF, TIF, BMP.
