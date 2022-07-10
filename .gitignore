@@ -13,3 +13,17 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# LG
+out
+align
+*.log
+*.tif
+*.tiff
+*.jpg
+*.jpeg
+!/R.JPG
+!/G.JPG
+!/B.JPG
+!/Unaligned.JPG
+!/Alinged.JPG
