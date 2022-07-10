@@ -29,6 +29,10 @@ Defaults: it starts from smalles image center (they're supposed to be the same s
 
 Then it performs movements 64 pixels in all directions (this gives 64+64+1 = 129x129 = 16641/16.6K checks each checking 161K pixels).
 
+To figure out which movement is best it calculates different for two iamges at each pixel (absolute value of their difference. it assumes images are monochrome and just takes a green pixel of image if it isn't monochrome) and then calculates sum of those absolute pixel differences.
+
+Then it chooses minimum from all possible movements range (by default moving 401x401 square from image center in all directions covering 129x129 checks).
+
 You can also override number of (v)CPUs autodetection and specify for example N=8.
 
 You can change those details via environmental variables.
