@@ -21,7 +21,10 @@ But `convert` will not try to aliggn images together, it will only combine chann
 
 See:
 
+- Aligned:
 ![small_Aligned.JPG](Aligned.JPG)
+
+- Unaligned:
 ![small_Unaligned.JPG](Unaligned.JPG)
 
 # Some details
