@@ -19,6 +19,15 @@ import (
 	"golang.org/x/image/tiff"
 )
 
+const (
+	extJPG  = ".jpg"
+	extJPEG = ".jpeg"
+	extPNG  = ".png"
+	extTIF  = ".tif"
+	extGIF  = ".git"
+	extBMP  = ".bmp"
+)
+
 func optimizeAlignment(img1, img2 image.Image, fromX, fromY, rangeX, rangeY, sizeX, sizeY, thrN int) (int, int, float64) {
 	if thrN%3 == 0 {
 		thrN = (thrN / 3) + 1
@@ -466,46 +475,46 @@ func alignImages(imageNames []string) error {
 	}
 	dtStart = time.Now()
 	if bits8 {
-		if strings.Contains(lfn, ".png") {
+		if strings.Contains(lfn, extPNG) {
 			fmt.Printf("Using 8bit PNG output\n")
 			enc := png.Encoder{CompressionLevel: pngq}
 			err = enc.Encode(fi, target8)
-		} else if strings.Contains(lfn, ".jpg") || strings.Contains(lfn, ".jpeg") {
+		} else if strings.Contains(lfn, extJPG) || strings.Contains(lfn, extJPEG) {
 			fmt.Printf("Using 8bit JPG output\n")
 			var jopts *jpeg.Options
 			if jpegq >= 0 {
 				jopts = &jpeg.Options{Quality: jpegq}
 			}
 			err = jpeg.Encode(fi, target8, jopts)
-		} else if strings.Contains(lfn, ".gif") {
+		} else if strings.Contains(lfn, extGIF) {
 			fmt.Printf("Using 8bit GIF output\n")
 			err = gif.Encode(fi, target8, nil)
-		} else if strings.Contains(lfn, ".tif") {
+		} else if strings.Contains(lfn, extTIF) {
 			fmt.Printf("Using 8bit TIFF output\n")
 			err = tiff.Encode(fi, target8, nil)
-		} else if strings.Contains(lfn, ".bmp") {
+		} else if strings.Contains(lfn, extBMP) {
 			fmt.Printf("Using 8bit BMP output\n")
 			err = bmp.Encode(fi, target8)
 		}
 	} else {
-		if strings.Contains(lfn, ".png") {
+		if strings.Contains(lfn, extPNG) {
 			fmt.Printf("Using 16bit PNG output\n")
 			enc := png.Encoder{CompressionLevel: pngq}
 			err = enc.Encode(fi, target16)
-		} else if strings.Contains(lfn, ".jpg") || strings.Contains(lfn, ".jpeg") {
+		} else if strings.Contains(lfn, extJPG) || strings.Contains(lfn, extJPEG) {
 			fmt.Printf("Using 16bit JPG output\n")
 			var jopts *jpeg.Options
 			if jpegq >= 0 {
 				jopts = &jpeg.Options{Quality: jpegq}
 			}
 			err = jpeg.Encode(fi, target16, jopts)
-		} else if strings.Contains(lfn, ".gif") {
+		} else if strings.Contains(lfn, extGIF) {
 			fmt.Printf("Using 16bit GIF output\n")
 			err = gif.Encode(fi, target16, nil)
-		} else if strings.Contains(lfn, ".tif") {
+		} else if strings.Contains(lfn, extTIF) {
 			fmt.Printf("Using 16bit TIF output\n")
 			err = tiff.Encode(fi, target16, nil)
-		} else if strings.Contains(lfn, ".bmp") {
+		} else if strings.Contains(lfn, extBMP) {
 			fmt.Printf("Using 16bit BMP output\n")
 			err = bmp.Encode(fi, target16)
 		}
