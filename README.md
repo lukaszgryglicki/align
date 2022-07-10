@@ -48,10 +48,13 @@ You can change those details via environmental variables.
 # Environment variables:
 
 - `N` - how many (v)CPUs use, defaults to autodetect.
+- `BITS8` - save 8bit image instead of 16bit (default).
 - `FROM_X` - where is the x value for image circle to start aligning from (middle of the first image if not specified).
 - `FROM_Y` - where is the y value for image circle to start aligning from (middle of the first image if not specified).
 - `RANGE_X` - how many x pixels check around start x (defaults to 64, which gives 64+64+1 = 129 checks, 129x129 = 16641 checks for X & Y - if set the same).
 - `RANGE_Y` - how many y pixels check around start y (defaults to 64, which gives 64+64+1 = 129 checks, 129x129 = 16641 checks for X & Y - if set the same).
 - `SIZE_X` - how many x pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels - if x & y pixels set the same).
 - `SIZE_Y` - how many y pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels - if x & y pixels set the same).
-
+- `PXV_SHIFT` - shift pixel values in output image (like you have 16bit values but want to shift them to 8, then specify `PXV_SHIFT=8`).
+- `Q` - jpeg quality 1-100, will use library default if not specified.
+- `PQ` - png quality 0-3 (0 is default): 0=DefaultCompression, 1=NoCompression, 2=BestSpeed, 3=BestCompression.

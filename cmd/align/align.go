@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"image"
 	"image/color"
@@ -177,8 +176,57 @@ func alignImages(imageNames []string) error {
 		sizeY = v
 	}
 
-	// Flushing before endline
-	flush := bufio.NewWriter(os.Stdout)
+	// 8bit mode
+	bits8S := os.Getenv("BITS8")
+	bits8 := bits8S != ""
+	if bits8 {
+		fmt.Printf("Using 8bit output file\n")
+	}
+
+	// Pixel values shift
+	pxvShift := 0
+	pxvShiftS := os.Getenv("PXV_SHIFT")
+	if pxvShiftS != "" {
+		v, err := strconv.Atoi(pxvShiftS)
+		if err != nil {
+			return err
+		}
+		if v < -31 || v > 31 {
+			return fmt.Errorf("PXV_SHIFT must be from [-31, 31]")
+		}
+		pxvShift = v
+	}
+	if pxvShift != 0 {
+		fmt.Printf("Pixel values shift: %d\n", pxvShift)
+	}
+
+	// JPEG Quality
+	jpegqStr := os.Getenv("Q")
+	jpegq := -1
+	if jpegqStr != "" {
+		v, err := strconv.Atoi(jpegqStr)
+		if err != nil {
+			return err
+		}
+		if v < 1 || v > 100 {
+			return fmt.Errorf("Q must be from 1-100 range")
+		}
+		jpegq = v
+	}
+
+	// PNG Quality
+	pngqStr := os.Getenv("PQ")
+	pngq := png.DefaultCompression
+	if pngqStr != "" {
+		v, err := strconv.Atoi(pngqStr)
+		if err != nil {
+			return err
+		}
+		if v < 0 || v > 3 {
+			return fmt.Errorf("PQ must be from 0-3 range")
+		}
+		pngq = png.CompressionLevel(-v)
+	}
 
 	ch := make(chan error)
 	nThreads := 0
@@ -214,8 +262,7 @@ func alignImages(imageNames []string) error {
 			x[idx] = bounds.Max.X
 			y[idx] = bounds.Max.Y
 			dtEndI := time.Now()
-			fmt.Printf(" #%d: (%d x %d: %+v)...", idx, x[idx], y[idx], dtEndI.Sub(dtStartI))
-			_ = flush.Flush()
+			fmt.Printf("#%d: (%d x %d: %+v)\n", idx, x[idx], y[idx], dtEndI.Sub(dtStartI))
 			ch <- nil
 		}(ch, i)
 		// Keep maximum number of threads
@@ -235,14 +282,13 @@ func alignImages(imageNames []string) error {
 		}
 		nThreads--
 	}
-	_ = flush.Flush()
 	if fromX == 0 {
 		fromX = x[0] / 2
 	}
 	if fromY == 0 {
 		fromY = y[0] / 2
 	}
-	fmt.Printf(" middle: (%d,%d) range: (%d, %d), size: (%d, %d)...", fromX, fromY, rangeX, rangeY, sizeX, sizeY)
+	fmt.Printf("Middle: (%d,%d) range: (%d, %d), size: (%d, %d)\n", fromX, fromY, rangeX, rangeY, sizeX, sizeY)
 	if fromX-rangeX-sizeX < 0 {
 		return fmt.Errorf("fromX-rangeX-sizeX=%d, it must be >= 0", fromX-rangeX-sizeX)
 	}
@@ -286,19 +332,18 @@ func alignImages(imageNames []string) error {
 			}
 			offX[i], offY[i], dist[i] = optimizeAlignment(m[i], m[j], fromX, fromY, rangeX, rangeY, sizeX, sizeY, thrN)
 			dtEndI := time.Now()
-			fmt.Printf(" #%d<->#%d (in %v): offset: (%d, %d), dist: %f...", i, j, dtEndI.Sub(dtStartI), offX[i], offY[i], dist[i])
-			_ = flush.Flush()
+			fmt.Printf("#%d<->#%d (in %v): offset: (%d, %d), dist: %f\n", i, j, dtEndI.Sub(dtStartI), offX[i], offY[i], dist[i])
 			if offX[i] == -rangeX {
-				fmt.Printf("\nWARNING: aligning #%d image to #%d image required maximum %d shift left of the 2nd image, probably unaligned, try to increase RANGE_X and SIZE_X\n", i, j, rangeX)
+				fmt.Printf("WARNING: aligning #%d image to #%d image required maximum %d shift left of the 2nd image, probably unaligned, try to increase RANGE_X and SIZE_X\n", i, j, rangeX)
 			}
 			if offX[i] == rangeX {
-				fmt.Printf("\nWARNING: aligning #%d image to #%d image required maximum %d shift right of the 2nd image, probably unaligned, try to increase RANGE_X and SIZE_X\n", i, j, rangeX)
+				fmt.Printf("WARNING: aligning #%d image to #%d image required maximum %d shift right of the 2nd image, probably unaligned, try to increase RANGE_X and SIZE_X\n", i, j, rangeX)
 			}
 			if offY[i] == -rangeY {
-				fmt.Printf("\nWARNING: aligning #%d image to #%d image required maximum %d shift up of the 2nd image, probably unaligned, try to increase RANGE_Y and SIZE_Y\n", i, j, rangeY)
+				fmt.Printf("WARNING: aligning #%d image to #%d image required maximum %d shift up of the 2nd image, probably unaligned, try to increase RANGE_Y and SIZE_Y\n", i, j, rangeY)
 			}
 			if offY[i] == rangeY {
-				fmt.Printf("\nWARNING: aligning #%d image to #%d image required maximum %d shift down of the 2nd image, probably unaligned, try to increase RANGE_Y and SIZE_Y\n", i, j, rangeY)
+				fmt.Printf("WARNING: aligning #%d image to #%d image required maximum %d shift down of the 2nd image, probably unaligned, try to increase RANGE_Y and SIZE_Y\n", i, j, rangeY)
 			}
 			ch <- nil
 		}(ch, idx)
@@ -319,7 +364,6 @@ func alignImages(imageNames []string) error {
 		}
 		nThreads--
 	}
-	_ = flush.Flush()
 	// Now figure out order of alignment and final image size
 	minI := 0
 	if dist[1] < dist[minI] {
@@ -343,10 +387,22 @@ func alignImages(imageNames []string) error {
 		oX = [3]int{offX[2], -offX[1], 0}
 		oY = [3]int{offY[2], -offY[1], 0}
 	}
-	target := image.NewRGBA(image.Rect(0, 0, minX, minY))
+	fmt.Printf("Generating output image data...\n")
+	dtStart := time.Now()
 	var (
-		ii [3]int
-		jj [3]int
+		target16 *image.RGBA64
+		target8  *image.RGBA
+	)
+	if bits8 {
+		target8 = image.NewRGBA(image.Rect(0, 0, minX, minY))
+	} else {
+		target16 = image.NewRGBA64(image.Rect(0, 0, minX, minY))
+	}
+	var (
+		ii  [3]int
+		jj  [3]int
+		val float64
+		n   int64
 	)
 	for i := 0; i < minX; i++ {
 		for k := 0; k < 3; k++ {
@@ -371,27 +427,82 @@ func alignImages(imageNames []string) error {
 			_, pr, _, _ := m[0].At(ii[0], jj[0]).RGBA()
 			_, pg, _, _ := m[1].At(ii[1], jj[1]).RGBA()
 			_, pb, _, _ := m[2].At(ii[2], jj[2]).RGBA()
-			pixel := color.RGBA64{uint16(pr), uint16(pg), uint16(pb), 0}
-			target.Set(i, j, pixel)
+			if pxvShift > 0 {
+				pr >>= pxvShift
+				pg >>= pxvShift
+				pb >>= pxvShift
+			} else if pxvShift < 0 {
+				pr <<= -pxvShift
+				pg <<= -pxvShift
+				pb <<= -pxvShift
+			}
+			val += float64(pr + pg + pb)
+			n++
+			if bits8 {
+				pixel := color.RGBA{uint8(pr), uint8(pg), uint8(pb), 0xff}
+				target8.Set(i, j, pixel)
+			} else {
+				pixel := color.RGBA64{uint16(pr), uint16(pg), uint16(pb), 0xffff}
+				target16.Set(i, j, pixel)
+			}
 		}
 	}
-	lfn := imageNames[3]
-	fi, err := os.Create(lfn)
+	val /= float64(n * 3)
+	fmt.Printf("AVG pixel value: %f\n", val)
+	dtEnd := time.Now()
+	fmt.Printf("Generated in %+v\n", dtEnd.Sub(dtStart))
+	fmt.Printf("Saving image...\n")
+	fn := imageNames[3]
+	lfn := strings.ToLower(fn)
+	fi, err := os.Create(fn)
 	if err != nil {
 		return err
 	}
-	dtStart := time.Now()
-	if strings.Contains(lfn, ".png") {
-		enc := png.Encoder{CompressionLevel: 9}
-		err = enc.Encode(fi, target)
-	} else if strings.Contains(lfn, ".jpg") || strings.Contains(lfn, ".jpeg") {
-		err = jpeg.Encode(fi, target, &jpeg.Options{Quality: 90})
-	} else if strings.Contains(lfn, ".gif") {
-		err = gif.Encode(fi, target, nil)
-	} else if strings.Contains(lfn, ".tif") {
-		err = tiff.Encode(fi, target, nil)
-	} else if strings.Contains(lfn, ".bmp") {
-		err = bmp.Encode(fi, target)
+	dtStart = time.Now()
+	if bits8 {
+		if strings.Contains(lfn, ".png") {
+			fmt.Printf("Using 8bit PNG output\n")
+			enc := png.Encoder{CompressionLevel: pngq}
+			err = enc.Encode(fi, target8)
+		} else if strings.Contains(lfn, ".jpg") || strings.Contains(lfn, ".jpeg") {
+			fmt.Printf("Using 8bit JPG output\n")
+			var jopts *jpeg.Options
+			if jpegq >= 0 {
+				jopts = &jpeg.Options{Quality: jpegq}
+			}
+			err = jpeg.Encode(fi, target8, jopts)
+		} else if strings.Contains(lfn, ".gif") {
+			fmt.Printf("Using 8bit GIF output\n")
+			err = gif.Encode(fi, target8, nil)
+		} else if strings.Contains(lfn, ".tif") {
+			fmt.Printf("Using 8bit TIFF output\n")
+			err = tiff.Encode(fi, target8, nil)
+		} else if strings.Contains(lfn, ".bmp") {
+			fmt.Printf("Using 8bit BMP output\n")
+			err = bmp.Encode(fi, target8)
+		}
+	} else {
+		if strings.Contains(lfn, ".png") {
+			fmt.Printf("Using 16bit PNG output\n")
+			enc := png.Encoder{CompressionLevel: pngq}
+			err = enc.Encode(fi, target16)
+		} else if strings.Contains(lfn, ".jpg") || strings.Contains(lfn, ".jpeg") {
+			fmt.Printf("Using 16bit JPG output\n")
+			var jopts *jpeg.Options
+			if jpegq >= 0 {
+				jopts = &jpeg.Options{Quality: jpegq}
+			}
+			err = jpeg.Encode(fi, target16, jopts)
+		} else if strings.Contains(lfn, ".gif") {
+			fmt.Printf("Using 16bit GIF output\n")
+			err = gif.Encode(fi, target16, nil)
+		} else if strings.Contains(lfn, ".tif") {
+			fmt.Printf("Using 16bit TIF output\n")
+			err = tiff.Encode(fi, target16, nil)
+		} else if strings.Contains(lfn, ".bmp") {
+			fmt.Printf("Using 16bit BMP output\n")
+			err = bmp.Encode(fi, target16)
+		}
 	}
 	if err != nil {
 		_ = fi.Close()
@@ -401,8 +512,8 @@ func alignImages(imageNames []string) error {
 	if err != nil {
 		return err
 	}
-	dtEnd := time.Now()
-	fmt.Printf("%s written in %v\n", lfn, dtEnd.Sub(dtStart))
+	dtEnd = time.Now()
+	fmt.Printf("%s written in %v\n", fn, dtEnd.Sub(dtStart))
 	return nil
 }
 
@@ -416,14 +527,19 @@ func main() {
 	} else {
 		fmt.Printf("Please provide 3 iamges for R, G, B channel to align and 1 image for output")
 		helpStr := `
+Supported input/output formats: JPG, PNG, TIF, GIF, BMP.
 Environment variables:
 N - how many (v)CPUs use, defaults to autodetect
+BITS8 - set 8 bit mode (default is 16 bit)
 FROM_X - where is the x value for image circle to start aligning from (middle of the first image if not specified)
 FROM_Y - where is the y value for image circle to start aligning from (middle of the first image if not specified)
 RANGE_X - how many x pixels check around start x (defaults to 64, which gives 64+64+1 = 129 checks)
 RANGE_Y - how many y pixels check around start y (defaults to 64, which gives 64+64+1 = 129 checks)
 SIZE_X - how many x pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels)
 SIZE_Y - how many y pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels)
+PXV_SHIFT - shift ouput pixel values right by this amount, can also be negative
+Q - jpeg quality 1-100, will use library default if not specified
+PQ - png quality 0-3 (0 is default): 0=DefaultCompression, 1=NoCompression, 2=BestSpeed, 3=BestCompression
 `
 		fmt.Printf("%s\n", helpStr)
 	}

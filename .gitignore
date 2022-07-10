@@ -23,6 +23,8 @@ out
 *.jpg
 *.jpeg
 *.bmp
+*.png
+*.gif
 !/R.JPG
 !/G.JPG
 !/B.JPG
