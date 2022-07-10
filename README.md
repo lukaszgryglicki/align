@@ -8,7 +8,8 @@ Align 3 images to create RGB image.
 
 # Installing
 
-- `make install`
+- `go install github.com/lukaszgryglicki/align/cmd/align` (for anybody, no need to have aything more than just go installed).
+- `make install` (requires `make` tool).
 
 # Results
 
