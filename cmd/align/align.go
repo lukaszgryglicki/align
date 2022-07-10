@@ -212,6 +212,7 @@ func alignImages(imageNames []string) error {
 			return fmt.Errorf("Q must be from 1-100 range")
 		}
 		jpegq = v
+		fmt.Printf("JPEG quality set to: %d%%\n", jpegq)
 	}
 
 	// PNG Quality
@@ -226,6 +227,7 @@ func alignImages(imageNames []string) error {
 			return fmt.Errorf("PQ must be from 0-3 range")
 		}
 		pngq = png.CompressionLevel(-v)
+		fmt.Printf("PNG quality set to: #%d\n", pngq)
 	}
 
 	ch := make(chan error)
@@ -375,18 +377,22 @@ func alignImages(imageNames []string) error {
 	var oX, oY [3]int
 	switch minI {
 	case 0:
+		fmt.Printf("Base align 0->1 at distance: %f\n", dist[0])
 		// 0->0, 0->1, 0->2
 		oX = [3]int{0, offX[0], -offX[2]}
 		oY = [3]int{0, offY[0], -offY[2]}
 	case 1:
+		fmt.Printf("Base align 1->2 at distance: %f\n", dist[0])
 		// 1->0, 1->1, 1->2
 		oX = [3]int{-offX[0], 0, offX[1]}
 		oY = [3]int{-offY[0], 0, offY[1]}
 	case 2:
+		fmt.Printf("Base align 2->0 at distance: %f\n", dist[0])
 		// 2->0, 2->1, 2->2
 		oX = [3]int{offX[2], -offX[1], 0}
 		oY = [3]int{offY[2], -offY[1], 0}
 	}
+	fmt.Printf("Offsets: (%+v, %+v)\n", oX, oY)
 	fmt.Printf("Generating output image data...\n")
 	dtStart := time.Now()
 	var (
