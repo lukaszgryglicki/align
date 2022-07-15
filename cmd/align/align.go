@@ -336,12 +336,22 @@ func alignImages(imageNames []string) error {
 	for idx := 0; idx < 3; idx++ {
 		go func(ch chan error, i int) {
 			// Input
-			dtStartI := time.Now()
 			j := i + 1
 			if j == 3 {
 				j = 0
 			}
-			offX[i], offY[i], dist[i] = optimizeAlignment(m[i], m[j], fromX, fromY, rangeX, rangeY, sizeX, sizeY, thrN)
+			got := false
+			str := os.Getenv(fmt.Sprintf("HINT_%d%d", i, j))
+			if str != "" {
+				n, err := fmt.Sscanf(str, "%d,%d,%f", &offX[i], &offY[i], &dist[i])
+				if err == nil && n == 3 {
+					got = true
+				}
+			}
+			dtStartI := time.Now()
+			if !got {
+				offX[i], offY[i], dist[i] = optimizeAlignment(m[i], m[j], fromX, fromY, rangeX, rangeY, sizeX, sizeY, thrN)
+			}
 			dtEndI := time.Now()
 			fmt.Printf("#%d<->#%d (in %v): offset: (%d, %d), dist: %f\n", i, j, dtEndI.Sub(dtStartI), offX[i], offY[i], dist[i])
 			if offX[i] == -rangeX {
@@ -552,6 +562,7 @@ RANGE_X - how many x pixels check around start x (defaults to 64, which gives 64
 RANGE_Y - how many y pixels check around start y (defaults to 64, which gives 64+64+1 = 129 checks)
 SIZE_X - how many x pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels)
 SIZE_Y - how many y pixels check in single pass (defaults to 200, which gives 200+200+1 = 401x401 = 160801 pixels)
+HINT_01/HINT_12/HINT_20 - provide a hint so no optimization is needed, example: -2,-2,7855.34
 PXV_SHIFT - shift ouput pixel values right by this amount, can also be negative
 Q - jpeg quality 1-100, will use library default if not specified
 PQ - png quality 0-3 (0 is default): 0=DefaultCompression, 1=NoCompression, 2=BestSpeed, 3=BestCompression
